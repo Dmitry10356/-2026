@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swing Christmas Tree</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    background: #17171d;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    overflow: hidden;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ===== ПЕРЕЛИВАЮЩАЯСЯ НАДПИСЬ ===== */
+.title {
+    margin: 0;
+    font-size: clamp(22px, 7vw, 38px);
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    text-align: center;
+
+    background: linear-gradient(
+        90deg,
+        #00ff80,
+        #00cfff,
+        #ffd700,
+        #ff3030,
+        #ff00ff,
+        #00ff80
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    animation: shimmer 4s linear infinite;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+@keyframes shimmer {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+/* ===== СЦЕНА ===== */
+.scene {
+    position: relative;
+    width: 320px;
+    height: 430px;
+}
+
+.tree {
+    position: absolute;
+    width: 240px;
+    height: 320px;
+    top: 65px;
+    left: 40px;
+    transform-origin: 50% 0;
+    animation: swing 4s ease-in-out infinite alternate;
+}
+
+.star {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffdc36;
+    font-size: 32px;
+    text-shadow: 0 0 12px gold;
+}
+
+.light {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    box-shadow: 0 0 7px currentColor;
+    animation: blink 1.5s infinite alternate;
+}
+
+@keyframes swing {
+    0%   { transform: rotate(-9deg); }
+    100% { transform: rotate(9deg); }
+}
+
+@keyframes blink {
+    from { opacity: 0.25; }
+    to   { opacity: 1; }
+}
+
+/* ===== КНОПКА МУЗЫКИ ===== */
+.music-btn {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 215, 0, 0.7);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffd700;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.35);
+    z-index: 10;
+}
+
+.music-btn:hover {
+    transform: scale(1.08);
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.music-btn.playing {
+    animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.35); }
+    50%      { box-shadow: 0 0 26px rgba(255, 215, 0, 0.9); }
+}
+</style>
+</head>
+
+<body>
+
+<h1 class="title">С Новым Годом!</h1>
+
+<div class="scene">
+    <div class="tree" id="tree">
+        <div class="star">★</div>
+    </div>
+</div>
+
+<!-- Музыка: файл music.mp3 должен лежать рядом с index.html -->
+<audio id="music" src="music.mp3" loop preload="auto"></audio>
+
+<button class="music-btn" id="musicBtn" title="Включить / выключить музыку">♪</button>
+
+<script>
+const tree = document.getElementById("tree");
+
+const colors = [
+    "#00ff80",
+    "#ff3030",
+    "#00cfff",
+    "#ffd700",
+    "#ffffff"
+];
+
+for (let i = 0; i < 150; i++) {
+
+    let y = Math.random() * 300;
+    let width = (y / 300) * 220;
+    let x = 120 + (Math.random() - 0.5) * width;
+
+    let light = document.createElement("div");
+
+    light.className = "light";
+    light.style.left = x + "px";
+    light.style.top = y + "px";
+
+    let color = colors[
+        Math.floor(Math.random() * colors.length)
+    ];
+
+    light.style.background = color;
+    light.style.color = color;
+    light.style.animationDelay = Math.random() * 2 + "s";
+
+    tree.appendChild(light);
+}
+
+/* ===== МУЗЫКА ===== */
+const music = document.getElementById("music");
+const musicBtn = document.getElementById("musicBtn");
+
+music.volume = 0.5;
+
+function updateBtn() {
+    const playing = !music.paused;
+    musicBtn.textContent = playing ? "❚❚" : "♪";
+    musicBtn.classList.toggle("playing", playing);
+}
+
+function playMusic() {
+    music.play().then(updateBtn).catch(() => updateBtn());
+}
+
+musicBtn.addEventListener("click", () => {
+    if (music.paused) {
+        playMusic();
+    } else {
+        music.pause();
+        updateBtn();
+    }
+});
+
+music.addEventListener("play", updateBtn);
+music.addEventListener("pause", updateBtn);
+
+/* Пытаемся запустить сразу (браузер может заблокировать),
+   тогда включаем по первому клику/нажатию клавиши */
+playMusic();
+
+function autoStart() {
+    if (music.paused) playMusic();
+    document.removeEventListener("pointerdown", autoStart);
+    document.removeEventListener("keydown", autoStart);
+}
+document.addEventListener("pointerdown", autoStart);
+document.addEventListener("keydown", autoStart);
+</script>
+
+</body>
+</html>
